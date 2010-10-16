@@ -28,6 +28,11 @@ sealed abstract trait Paint {
   ): org.geotools.styling.Fill
 }
 
+object Style {
+  val Factory =
+    org.geotools.factory.CommonFactoryFinder.getStyleFactory(null)
+}
+
 object Stroke {
   sealed abstract trait Mode
   object Tile extends Mode
@@ -231,16 +236,88 @@ case class Label(
   }
 }
 
-// case class Symbol(
-//   shape: Expression,
-//   fill: Fill,
-//   stroke: Stroke,
-//   width: Expression
-// ) extends StyleImpl with Paint
+case class Symbol(
+  shape: Expression,
+  fill: Fill,
+  stroke: Stroke,
+  size: Expression,
+  rotation: Expression,
+  opacity: Expression
+) extends StyleImpl with Paint {
+  val filter = None
+  val maxScale = None
+  val minScale = None
+  val symbolizers = 
+    Seq(
+      new org.geotools.styling.StyleBuilder(Style.Factory)
+        .createPointSymbolizer(graphic)
+    )
+
+
+  def asStroke(
+    width: Expression,
+    opacity: Expression,
+    linejoin: Expression,
+    linecap: Expression,
+    dasharray: Seq[Double],
+    dashoffset: Expression,
+    mode: Stroke.Mode
+  ): org.geotools.styling.Stroke = {
+    Style.Factory.createStroke(
+      null,
+      width,
+      opacity,
+      linejoin,
+      linecap,
+      dasharray.map(_.toFloat).toArray,
+      dashoffset,
+      if (mode == Stroke.Tile) graphic else null,
+      if (mode == Stroke.Follow) graphic else null
+    )
+  }
+
+  def asFill(
+    opacity: Expression
+  ): org.geotools.styling.Fill = {
+    Style.Factory.fill(
+      graphic,
+      null,
+      opacity
+    )
+  }
+
+  def graphic = 
+    Style.Factory.createGraphic(
+      null,
+      Array(
+        Style.Factory.createMark(
+          shape,
+          stroke.stroke.asStroke(
+            stroke.width,
+            stroke.opacity,
+            stroke.linejoin,
+            stroke.linecap,
+            stroke.dasharray,
+            stroke.dashoffset,
+            stroke.mode
+          ),
+          fill.fill.asFill(fill.opacity),
+          size,
+          rotation
+        )
+      ),
+      null,
+      opacity,
+      size,
+      rotation
+    )
+}
 
 case class Graphic(
   url: String,
-  width: Expression
+  opacity: Expression,
+  size: Expression,
+  rotation: Expression
 ) extends StyleImpl with Paint {
   private val factory =
     org.geotools.factory.CommonFactoryFinder.getStyleFactory(null)
@@ -282,7 +359,7 @@ case class Graphic(
     factory.fill(
       graphic,
       null,
-      opacity.underlying
+      opacity
     )
   }
 
@@ -291,8 +368,8 @@ case class Graphic(
       Array(factory.createExternalGraphic(url, "image/png")),
       null,
       null,
-      null,  // opacity
-      width.underlying, // size
-      null   // rotation
+      opacity,
+      size,
+      rotation
     )
 }
