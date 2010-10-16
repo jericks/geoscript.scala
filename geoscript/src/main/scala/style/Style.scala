@@ -52,6 +52,8 @@ abstract class SimpleStyle extends Style {
   def maxScale: Option[Double]
 
   def symbolizers: Seq[org.geotools.styling.Symbolizer]
+
+  def zIndex: Double
   
   override def where(p: Filter): Style =
     new DerivedStyle(this) {
@@ -92,6 +94,7 @@ class DerivedStyle(val delegate: SimpleStyle) extends SimpleStyle {
   def minScale = delegate.minScale
   def maxScale = delegate.maxScale
   def symbolizers = delegate.symbolizers
+  def zIndex = delegate.zIndex
 }
 
 case class CompositeStyle(styles: Seq[Style]) extends Style {
@@ -173,9 +176,11 @@ case class Color(rgb: String) extends Paint {
   }
 }
 
-case class Fill(fill: Paint = null, opacity: Expression = null)
-extends SimpleStyle
-{
+case class Fill(
+  fill: Paint = null, 
+  opacity: Expression = null,
+  zIndex: Double = 0
+) extends SimpleStyle {
   private val factory =
     org.geotools.factory.CommonFactoryFinder.getStyleFactory(null)
 
@@ -194,6 +199,7 @@ case class Stroke(
   linejoin: Expression = null,
   dashoffset: Expression = null,
   dasharray: Seq[Float] = null,
+  zIndex: Double = 0,
   mode: Stroke.Mode = Stroke.Follow
 ) extends SimpleStyle {
   private val factory =
@@ -227,6 +233,7 @@ case class Label(
     sym.setGeometry(geometry)
     Seq(sym)
   }
+  def zIndex = 0
 }
 
 case class Symbol(
@@ -235,7 +242,8 @@ case class Symbol(
   stroke: Stroke,
   size: Expression,
   rotation: Expression,
-  opacity: Expression
+  opacity: Expression,
+  zIndex: Double = 0
 ) extends SimpleStyle with Paint {
   val filter = None
   val maxScale = None
@@ -310,7 +318,8 @@ case class Graphic(
   url: String,
   opacity: Expression,
   size: Expression,
-  rotation: Expression
+  rotation: Expression,
+  zIndex: Double = 0
 ) extends SimpleStyle with Paint {
   private val factory =
     org.geotools.factory.CommonFactoryFinder.getStyleFactory(null)
