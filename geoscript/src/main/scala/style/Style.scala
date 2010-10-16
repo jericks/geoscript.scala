@@ -8,7 +8,26 @@ sealed abstract trait Style {
   def where(filter: Filter): Style
   def aboveScale(s: Double): Style
   def belowScale(s: Double): Style
-  def and(other: Style): Style
+  def and(that: Style): Style = {
+    val outer = this
+    new Style {
+      override def aboveScale(s: Double): Style =
+        outer.aboveScale(s) and that.aboveScale(s)
+
+      override def belowScale(s: Double): Style =
+        outer.belowScale(s) and that.belowScale(s)
+
+      override def where(p: Filter): Style =
+        outer.where(p) and that.where(p)
+
+      override def underlying = {
+        val style = outer.underlying
+        style.featureTypeStyles.addAll(that.underlying.featureTypeStyles)
+        style
+      }
+    }
+  }
+
   def underlying: org.geotools.styling.Style
 }
 
@@ -81,31 +100,6 @@ abstract class StyleImpl extends Style {
       def minScale = outer.minScale
       def maxScale = outer.maxScale.map(math.min(_, s)).orElse(Some(s))
       def symbolizers = outer.symbolizers
-    }
-  }
-
-  override def and(that: Style): Style = {
-    val outer = this
-    new StyleImpl {
-      def filter = outer.filter
-      def minScale = outer.minScale
-      def maxScale = outer.maxScale
-      def symbolizers = outer.symbolizers
-
-      override def aboveScale(s: Double): Style =
-        outer.aboveScale(s) and that.aboveScale(s)
-
-      override def belowScale(s: Double): Style =
-        outer.belowScale(s) and that.belowScale(s)
-
-      override def where(p: Filter): Style =
-        outer.where(p) and that.where(p)
-
-      override def underlying = {
-        val style = outer.underlying
-        style.featureTypeStyles.addAll(that.underlying.featureTypeStyles)
-        style
-      }
     }
   }
 
