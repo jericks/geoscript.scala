@@ -40,7 +40,7 @@ object Stroke {
   object Follow extends Mode
 }
 
-abstract class StyleImpl extends Style {
+abstract class SimpleStyle extends Style {
   private val styles =
     org.geotools.factory.CommonFactoryFinder.getStyleFactory(null)
   private val filters =
@@ -56,7 +56,7 @@ abstract class StyleImpl extends Style {
   
   override def where(p: Filter): Style = {
     val outer = this
-    new StyleImpl {
+    new SimpleStyle {
       def filter = 
         outer.filter.map(filters.and(p, _): Filter).orElse(Some(p))
       def minScale = outer.minScale
@@ -67,7 +67,7 @@ abstract class StyleImpl extends Style {
 
   override def aboveScale(s: Double): Style = {
     val outer = this
-    new StyleImpl {
+    new SimpleStyle {
       def filter = outer.filter
       def minScale = outer.minScale.map(math.max(_, s)).orElse(Some(s))
       def maxScale = outer.maxScale
@@ -77,7 +77,7 @@ abstract class StyleImpl extends Style {
 
   override def belowScale(s: Double): Style = {
     val outer = this
-    new StyleImpl {
+    new SimpleStyle {
       def filter = outer.filter
       def minScale = outer.minScale
       def maxScale = outer.maxScale.map(math.min(_, s)).orElse(Some(s))
@@ -174,7 +174,7 @@ case class Color(rgb: String) extends Paint {
 }
 
 case class Fill(fill: Paint = null, opacity: Expression = null)
-extends StyleImpl
+extends SimpleStyle
 {
   private val factory =
     org.geotools.factory.CommonFactoryFinder.getStyleFactory(null)
@@ -195,7 +195,7 @@ case class Stroke(
   dashoffset: Expression = null,
   dasharray: Seq[Float] = null,
   mode: Stroke.Mode = Stroke.Follow
-) extends StyleImpl {
+) extends SimpleStyle {
   private val factory =
     org.geotools.factory.CommonFactoryFinder.getStyleFactory(null)
 
@@ -214,7 +214,7 @@ case class Stroke(
 case class Label(
   text: Expression,
   geometry: Expression
-) extends StyleImpl {
+) extends SimpleStyle {
   private val factory =
     org.geotools.factory.CommonFactoryFinder.getStyleFactory(null)
 
@@ -236,7 +236,7 @@ case class Symbol(
   size: Expression,
   rotation: Expression,
   opacity: Expression
-) extends StyleImpl with Paint {
+) extends SimpleStyle with Paint {
   val filter = None
   val maxScale = None
   val minScale = None
@@ -311,7 +311,7 @@ case class Graphic(
   opacity: Expression,
   size: Expression,
   rotation: Expression
-) extends StyleImpl with Paint {
+) extends SimpleStyle with Paint {
   private val factory =
     org.geotools.factory.CommonFactoryFinder.getStyleFactory(null)
 
