@@ -53,36 +53,23 @@ abstract class SimpleStyle extends Style {
 
   def symbolizers: Seq[org.geotools.styling.Symbolizer]
   
-  override def where(p: Filter): Style = {
-    val outer = this
-    new SimpleStyle {
-      def filter = 
-        outer.filter.map(filters.and(p, _): Filter).orElse(Some(p))
-      def minScale = outer.minScale
-      def maxScale = outer.maxScale
-      def symbolizers = outer.symbolizers
+  override def where(p: Filter): Style =
+    new DerivedStyle(this) {
+      override def filter = 
+        delegate.filter.map(filters.and(p, _): Filter).orElse(Some(p))
     }
-  }
 
-  override def aboveScale(s: Double): Style = {
-    val outer = this
-    new SimpleStyle {
-      def filter = outer.filter
-      def minScale = outer.minScale.map(math.max(_, s)).orElse(Some(s))
-      def maxScale = outer.maxScale
-      def symbolizers = outer.symbolizers
+  override def aboveScale(s: Double): Style =
+    new DerivedStyle(this) {
+      override def minScale =
+        delegate.minScale.map(math.max(_, s)).orElse(Some(s))
     }
-  }
 
-  override def belowScale(s: Double): Style = {
-    val outer = this
-    new SimpleStyle {
-      def filter = outer.filter
-      def minScale = outer.minScale
-      def maxScale = outer.maxScale.map(math.min(_, s)).orElse(Some(s))
-      def symbolizers = outer.symbolizers
+  override def belowScale(s: Double): Style =
+    new DerivedStyle(this) {
+      override def maxScale =
+        delegate.maxScale.map(math.min(_, s)).orElse(Some(s))
     }
-  }
 
   def underlying = {
     val rule = styles.createRule()
@@ -98,6 +85,13 @@ abstract class SimpleStyle extends Style {
     style.featureTypeStyles.add(ftstyle)
     style
   }
+}
+
+class DerivedStyle(val delegate: SimpleStyle) extends SimpleStyle {
+  def filter = delegate.filter
+  def minScale = delegate.minScale
+  def maxScale = delegate.maxScale
+  def symbolizers = delegate.symbolizers
 }
 
 case class CompositeStyle(styles: Seq[Style]) extends Style {
