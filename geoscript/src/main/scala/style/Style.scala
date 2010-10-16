@@ -98,6 +98,12 @@ class DerivedStyle(val delegate: SimpleStyle) extends SimpleStyle {
 }
 
 case class CompositeStyle(styles: Seq[Style]) extends Style {
+  def flatten: Seq[SimpleStyle] =
+    styles flatMap {
+      case (style: SimpleStyle) => Seq(style)
+      case (comp: CompositeStyle) => comp.flatten
+    }
+
   override def aboveScale(s: Double): Style =
     CompositeStyle(styles map (_ aboveScale s))
 
@@ -111,10 +117,12 @@ case class CompositeStyle(styles: Seq[Style]) extends Style {
     val style = Style.Factory.createStyle()
     val ftStyle = Style.Factory.createFeatureTypeStyle()
 
-    for {
-      s <- styles
-      fts <- s.underlying.featureTypeStyles
-    } ftStyle.rules.addAll(fts.rules)
+    for ((z, styles) <- this.flatten.groupBy(_.zIndex).toSeq.sortBy(_._1)) {
+      val ftStyle = Style.Factory.createFeatureTypeStyle()
+      for (s <- styles; fts <- s.underlying.featureTypeStyles)
+        ftStyle.rules.addAll(fts.rules)
+      style.featureTypeStyles.add(ftStyle)
+    }
 
     style.featureTypeStyles.add(ftStyle)
     style
