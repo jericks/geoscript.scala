@@ -112,8 +112,14 @@ case class CompositeStyle(styles: Seq[Style]) extends Style {
 
   override def underlying = {
     val style = Style.Factory.createStyle()
-    for (s <- styles)
-      style.featureTypeStyles.addAll(s.underlying.featureTypeStyles)
+    val ftStyle = Style.Factory.createFeatureTypeStyle()
+
+    for {
+      s <- styles
+      fts <- s.underlying.featureTypeStyles
+    } ftStyle.rules.addAll(fts.rules)
+
+    style.featureTypeStyles.add(ftStyle)
     style
   }
 }
