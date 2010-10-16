@@ -14,6 +14,8 @@ import org.geoscript.projection._
 import org.geoscript.util.ClosingIterator
 import org.geoscript.workspace.{Directory,Workspace}
 
+import scala.collection.JavaConversions._
+
 /**
  * A Layer represents a geospatial dataset.
  */
@@ -95,8 +97,9 @@ trait Layer {
   def -= (feature: Feature) { this --= Seq(feature) }
 
   def --= (features: Iterable[Feature]) {
-    exclude(Filter.or(
-      features.toSeq filter { null != } map { f =>  Filter.id(Seq(f.id)) }
+    exclude(Filter.Factory.id(
+      for (f <- features.toSet if f != null) yield
+        Filter.Factory.featureId(f.id)
     ))
   }
 
@@ -112,10 +115,11 @@ trait Layer {
 
   def update(filter: Filter)(replace: Feature => Feature) {
     val tx = new gt.data.DefaultTransaction
-    val writer = filter match {
-      case Filter.Include => store.getFeatureWriter(name, tx)
-      case filter => store.getFeatureWriter(name, filter.underlying, tx)
-    }
+    val writer = 
+      if (filter.underlying == Filter.Include.underlying)
+        store.getFeatureWriter(name, tx)
+      else
+        store.getFeatureWriter(name, filter.underlying, tx)
 
     while (writer hasNext) {
       val existing = writer.next()

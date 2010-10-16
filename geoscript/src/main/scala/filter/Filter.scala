@@ -1,38 +1,23 @@
 package org.geoscript.filter
 
-import com.vividsolutions.jts.{geom=>jts}
-import org.{geotools => gt}
-import org.opengis.{filter => ogc}
-
-import org.geoscript.geometry.Geometry
-
-trait Filter {
-  def underlying: ogc.Filter
+sealed abstract trait Filter {
+  def underlying: org.opengis.filter.Filter
 }
 
 object Filter {
-  private val factory = gt.factory.CommonFactoryFinder.getFilterFactory2(null)
+  val Include = Filter.Wrapped(org.opengis.filter.Filter.INCLUDE)
+  val Exclude = Filter.Wrapped(org.opengis.filter.Filter.EXCLUDE)
+  val Factory =
+    org.geotools.factory.CommonFactoryFinder.getFilterFactory2(null)
 
-  private class Wrapper(val underlying: ogc.Filter) extends Filter
+  case class Wrapped(underlying: org.opengis.filter.Filter) extends Filter
 
-  object Include extends Filter {
-    val underlying = ogc.Filter.INCLUDE
-    def unapply(f: Filter): Boolean = f.underlying == ogc.Filter.INCLUDE
-  }
+  implicit def cqlToFilter(cql: String): Filter =
+    Wrapped(org.geotools.filter.text.ecql.ECQL.toFilter(cql))
 
-  def intersects(g: Geometry): Filter = {
-    new Wrapper(factory.intersects(null, factory.literal(g.underlying)))
-  }
+  implicit def unwrap(wrapped: Filter): org.opengis.filter.Filter =
+    wrapped.underlying
 
-  def id(ids: Seq[String]): Filter = {
-    val idSet = new java.util.HashSet[ogc.identity.Identifier]()
-    for (i <- ids) { idSet.add(factory.featureId(i)) }
-    new Wrapper(factory.id(idSet))
-  }
-
-  def or(filters: Seq[Filter]): Filter = {
-    val idList = new java.util.ArrayList[ogc.Filter]()
-    for (f <- filters) { idList.add(f.underlying) }
-    new Wrapper(factory.or(idList))
-  }
+  implicit def wrap(underlying: org.opengis.filter.Filter): Filter =
+    Wrapped(underlying)
 }

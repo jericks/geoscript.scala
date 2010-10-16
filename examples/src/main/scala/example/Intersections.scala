@@ -1,6 +1,7 @@
 package org.geoscript.example
 
 import org.geoscript._
+import filter.Filter.{ Factory => filters }
 
 object Intersections extends GeoScript with feature.GeoCrunch {
   def process(src: layer.Layer, dest: layer.Layer, joinField: String) {
@@ -8,7 +9,10 @@ object Intersections extends GeoScript with feature.GeoCrunch {
 
     for (feat <- src.features) {
       val intersections = 
-        src.filter(filter.Filter.intersects(feat.geometry))
+        src.filter(filters.intersects(
+          null, // don't specify which geometry to use
+          filters.literal(feat.geometry.underlying)
+        ))
       dest ++= 
         intersections.filter(_.id > feat.id).map { corner =>
           feature.Feature(

@@ -30,7 +30,7 @@ package render {
   case class Viewport(bounds: geometry.Bounds) {
     def draw(
       graphics: java.awt.Graphics2D,
-      layers: Seq[(layer.Layer, style.Style)],
+      layers: Seq[(layer.Layer, style_new.Style)],
       window: java.awt.Rectangle
     ) {
       import RenderingHints._
@@ -42,19 +42,19 @@ package render {
       val context = new org.geotools.map.DefaultMapContext()
       for ((data, style) <- layers) {
         context.addLayer(
-          new org.geotools.map.DefaultMapLayer(data.source, style.unwrapped)
+          new org.geotools.map.DefaultMapLayer(data.source, style.underlying)
         )
       }
       renderer.setContext(context)
       renderer.paint(graphics, window, bounds)
     }
 
-    def render(layers: Seq[(layer.Layer, style.Style)]): RichImage = {
+    def render(layers: Seq[(layer.Layer, style_new.Style)]): RichImage = {
       render(layers, Viewport.frame(bounds))
     }
 
     def render(
-      layers: Seq[(layer.Layer, style.Style)],
+      layers: Seq[(layer.Layer, style_new.Style)],
       window: java.awt.Rectangle
     ): RichImage = {
       import java.awt.image.BufferedImage
