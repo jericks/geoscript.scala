@@ -18,7 +18,7 @@ sealed abstract trait Paint {
     opacity: Expression,
     linejoin: Expression,
     linecap: Expression,
-    dasharray: Seq[Double],
+    dasharray: Seq[Float],
     dashoffset: Expression,
     mode: Stroke.Mode
   ): org.geotools.styling.Stroke
@@ -152,7 +152,7 @@ case class Color(rgb: String) extends Paint {
     opacity: Expression,
     linejoin: Expression,
     linecap: Expression,
-    dasharray: Seq[Double],
+    dasharray: Seq[Float],
     dashoffset: Expression,
     mode: Stroke.Mode
   ): org.geotools.styling.Stroke = {
@@ -162,7 +162,7 @@ case class Color(rgb: String) extends Paint {
       if (opacity == null) null else opacity,
       if (linejoin == null) null else linejoin,
       if (linecap == null) null else linecap,
-      if (dasharray == null) null else dasharray.map(_.toFloat).toArray,
+      if (dasharray == null) null else dasharray.toArray,
       if (dashoffset == null) null else dashoffset,
       null,
       null
@@ -200,7 +200,7 @@ case class Stroke(
   linecap: Expression = null,
   linejoin: Expression = null,
   dashoffset: Expression = null,
-  dasharray: Seq[Double] = null,
+  dasharray: Seq[Float] = null,
   mode: Stroke.Mode = Stroke.Follow
 ) extends StyleImpl {
   private val factory =
@@ -259,7 +259,7 @@ case class Symbol(
     opacity: Expression,
     linejoin: Expression,
     linecap: Expression,
-    dasharray: Seq[Double],
+    dasharray: Seq[Float],
     dashoffset: Expression,
     mode: Stroke.Mode
   ): org.geotools.styling.Stroke = {
@@ -269,7 +269,7 @@ case class Symbol(
       opacity,
       linejoin,
       linecap,
-      dasharray.map(_.toFloat).toArray,
+      dasharray.toArray,
       dashoffset,
       if (mode == Stroke.Tile) graphic else null,
       if (mode == Stroke.Follow) graphic else null
@@ -336,7 +336,7 @@ case class Graphic(
     opacity: Expression,
     linejoin: Expression,
     linecap: Expression,
-    dasharray: Seq[Double],
+    dasharray: Seq[Float],
     dashoffset: Expression,
     mode: Stroke.Mode
   ): org.geotools.styling.Stroke = {
@@ -346,7 +346,7 @@ case class Graphic(
       opacity,
       linejoin,
       linecap,
-      dasharray.map(_.toFloat).toArray,
+      dasharray.toArray,
       dashoffset,
       if (mode == Stroke.Tile) graphic else null,
       if (mode == Stroke.Follow) graphic else null
