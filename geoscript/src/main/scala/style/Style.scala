@@ -135,7 +135,7 @@ object Paint {
   implicit def stringToPaint(colorName: String): Paint =
     if (NamedColors contains colorName)
       Color(NamedColors(colorName))
-    else if (colorName matches ".*") 
+    else if (colorName matches ".*") // TODO: regex for hex color codes
       Color(colorName)
     else
       Color("#000000")
