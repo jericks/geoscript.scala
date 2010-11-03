@@ -225,9 +225,27 @@ case class Stroke(
     ))
 }
 
+case class Font(
+  name: String,
+  size: Int = 10,
+  style: String = "normal",
+  weight: String = "bold"
+)
+
 case class Label(
   text: Expression,
-  geometry: Expression
+  geometry: Expression = null,
+  font: Font = Font("Arial"),
+  fontFill: Fill = Fill("#000000"),
+  halo: Fill = null,
+  rotation: Double = 0,
+  anchor: (Double, Double) = (0, 0.5),
+  displacement: (Double, Double) = (0, 0),
+  followLine: Boolean = false,
+  maxAngleDelta: Double = 22.5,
+  maxDisplacement: Double = 50,
+  autoWrap: Int = 0,
+  repeat: Double = 0
 ) extends SimpleStyle {
   private val factory =
     org.geotools.factory.CommonFactoryFinder.getStyleFactory(null)
@@ -246,11 +264,11 @@ case class Label(
 
 case class Symbol(
   shape: Expression,
-  fill: Fill,
-  stroke: Stroke,
-  size: Expression,
-  rotation: Expression,
-  opacity: Expression,
+  fill: Fill = null,
+  stroke: Stroke = null,
+  size: Expression = 16,
+  rotation: Expression = 0,
+  opacity: Expression = 1,
   zIndex: Double = 0
 ) extends SimpleStyle with Paint {
   val filter = None
@@ -324,9 +342,9 @@ case class Symbol(
 
 case class Graphic(
   url: String,
-  opacity: Expression,
-  size: Expression,
-  rotation: Expression,
+  opacity: Expression = 1,
+  size: Expression = 16,
+  rotation: Expression = 0,
   zIndex: Double = 0
 ) extends SimpleStyle with Paint {
   private val factory =
