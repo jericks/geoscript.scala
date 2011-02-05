@@ -1,5 +1,7 @@
 package org.geoscript
 
+import plumbing._
+
 import collection.JavaConversions._
 import com.vividsolutions.jts.{geom=>jts}
 import java.awt.RenderingHints
@@ -12,19 +14,6 @@ package render {
   object RichImage {
     implicit def wrap(im: java.awt.image.RenderedImage) = new RichImage(im)
     implicit def unwrap(ri: RichImage): java.awt.image.RenderedImage = ri.im
-  }
-
-  trait Sink { def out: java.io.OutputStream }
-
-  object Sink {
-    implicit def fromFile(f: java.io.File) =
-      new Sink { def out = new java.io.FileOutputStream(f) }
-
-    implicit def fromPath(path: String) = 
-      fromFile(new java.io.File(".", path))
-
-    implicit def fromStream(o: java.io.OutputStream) = 
-      new Sink { val out = o } 
   }
 
   case class Viewport(bounds: geometry.Bounds) {
